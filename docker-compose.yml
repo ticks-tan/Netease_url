@@ -1,0 +1,13 @@
+services:
+  netease-url:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: netease_url:latest
+    container_name: netease-url
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - ./data/cookie.txt:/app/cookie.txt
+    environment:
+      - FLASK_ENV=development
