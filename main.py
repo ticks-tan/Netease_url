@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify ,redirect ,Response
 import json
 import os
+from functools import wraps
 import urllib.parse
 from hashlib import md5
 from random import randrange
@@ -142,11 +143,29 @@ def lyric_v1(id,cookies):
 
 app = Flask(__name__)
 
+# 从环境变量获取 API 密钥
+API_KEY = os.environ.get('API_KEY')
+
+def require_api_key(view_function):
+    @wraps(view_function)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            try:
+                auth_type, auth_token = auth_header.split(None, 1)
+                if auth_type.lower() == 'bearer' and auth_token == API_KEY:
+                    return view_function(*args, **kwargs)
+            except ValueError:
+                pass
+        return jsonify({'error': 'Invalid or missing API key'}), 401
+    return decorated_function
+
 @app.route('/')
 def hello_world():
     return '你好，世界！'
 
 @app.route('/Song_V1', methods=['GET', 'POST'])
+@require_api_key
 def Song_v1():
     if request.method == 'GET':
         song_ids = request.args.get('ids')
